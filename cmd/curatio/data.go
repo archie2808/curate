@@ -39,6 +39,36 @@ func FetchUserPlaylists(ctx context.Context, client *spotify.Client) ([]Playlist
 
 }
 
+type SavedTrackInfo struct {
+	ID   spotify.ID
+	Name string
+}
+
+func FetchLikedSongs(ctx context.Context, client *spotify.Client) ([]SavedTrackInfo, error) {
+	tracks, err := client.CurrentUsersTracks(ctx)
+
+	trackInfo := []SavedTrackInfo{}
+	if err != nil {
+		return nil, err
+	}
+
+	for {
+
+		for _, p := range tracks.Tracks {
+			trackInfo = append(trackInfo, SavedTrackInfo{ID: p.ID, Name: p.Name})
+		}
+		err = client.NextPage(ctx, tracks)
+		if err == spotify.ErrNoMorePages {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return trackInfo, nil
+}
+
 func FetchPlaylistItems() {
 	//tracks, err := client.GetPlaylistItems(
 	//	ctx,

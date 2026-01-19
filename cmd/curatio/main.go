@@ -28,6 +28,7 @@ var (
 			spotifyauth.ScopeUserReadPrivate,
 			spotifyauth.ScopePlaylistReadPrivate,
 			spotifyauth.ScopePlaylistReadCollaborative,
+			spotifyauth.ScopeUserLibraryRead,
 		),
 	)
 
@@ -67,8 +68,12 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	tracks, err := FetchLikedSongs(context.Background(), client)
+	if err != nil {
+		log.Fatal(err)
+	}
 	fmt.Printf("Fetched %d playlists\n", len(playlists))
-	fmt.Printf("Playlists: %v\n", playlists)
+	fmt.Printf("Playlists: %d tracks\n", len(tracks))
 
 }
 
