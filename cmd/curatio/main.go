@@ -64,16 +64,16 @@ func main() {
 	}
 	fmt.Println("You are now logged in as:", user.ID)
 
-	playlists, err := FetchUserPlaylists(context.Background(), client)
+	playlistsJSON, err := FetchUserPlaylists(context.Background(), client)
 	if err != nil {
 		log.Fatal(err)
 	}
-	tracks, err := FetchLikedSongs(context.Background(), client)
+	fmt.Println(string(playlistsJSON))
+
+	err = FetchLikedSongs(context.Background(), client)
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf("Fetched %d playlists\n", len(playlists))
-	fmt.Printf("Playlists: %d tracks\n", len(tracks))
 
 }
 

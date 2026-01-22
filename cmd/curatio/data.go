@@ -2,18 +2,20 @@ package main
 
 import (
 	"context"
+	"encoding/json"
+	"os"
 
 	"github.com/zmb3/spotify/v2"
 )
 
 type PlaylistInfo struct {
-	ID   spotify.ID
-	Name string
+	ID   spotify.ID `json:"id"`
+	Name string     `json:"name"`
 }
 
-func FetchUserPlaylists(ctx context.Context, client *spotify.Client) ([]PlaylistInfo, error) {
+func FetchUserPlaylists(ctx context.Context, client *spotify.Client) ([]byte, error) {
 	// Fetch the first page; subsequent pages are pulled via NextPage.
-	playlists, err := client.CurrentUsersPlaylists(ctx)
+	playlists, err := client.CurrentUsersPlaylists(ctx, spotify.Limit(50))
 	// Collect only the fields we care about for downstream use.
 	infos := []PlaylistInfo{}
 	if err != nil {
@@ -35,38 +37,57 @@ func FetchUserPlaylists(ctx context.Context, client *spotify.Client) ([]Playlist
 		}
 	}
 
-	return infos, nil
+	return json.Marshal(infos)
 
 }
 
 type SavedTrackInfo struct {
-	ID   spotify.ID
-	Name string
+	ID         spotify.ID             `json:"id"`
+	Name       string                 `json:"name"`
+	Artists    []spotify.SimpleArtist `json:"artists"`
+	DurationMs int                    `json:"duration_ms"`
+	Popularity int                    `json:"popularity"`
 }
 
-func FetchLikedSongs(ctx context.Context, client *spotify.Client) ([]SavedTrackInfo, error) {
-	tracks, err := client.CurrentUsersTracks(ctx)
-
-	trackInfo := []SavedTrackInfo{}
+func FetchLikedSongs(ctx context.Context, client *spotify.Client) error {
+	page, err := client.CurrentUsersTracks(ctx, spotify.Limit(50))
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	for {
+	file, err := os.Create("saved_tracks.ndjson")
+	if err != nil {
+		return err
+	}
+	defer file.Close()
 
-		for _, p := range tracks.Tracks {
-			trackInfo = append(trackInfo, SavedTrackInfo{ID: p.ID, Name: p.Name})
+	encoder := json.NewEncoder(file)
+
+	for {
+		for _, p := range page.Tracks {
+			entry := SavedTrackInfo{
+				ID:         p.ID,
+				Name:       p.Name,
+				Artists:    p.Artists,
+				DurationMs: int(p.Duration),
+				Popularity: int(p.Popularity),
+			}
+
+			if err := encoder.Encode(entry); err != nil {
+				return err
+			}
 		}
-		err = client.NextPage(ctx, tracks)
+
+		err = client.NextPage(ctx, page)
 		if err == spotify.ErrNoMorePages {
 			break
 		}
 		if err != nil {
-			return nil, err
+			return err
 		}
 	}
 
-	return trackInfo, nil
+	return nil
 }
 
 func FetchPlaylistItems() {
