@@ -1,6 +1,6 @@
 package main
 
-/*import (
+import (
 	"bufio"
 	"context"
 	"fmt"
@@ -11,7 +11,7 @@ package main
 	"google.golang.org/genai"
 )
 
-func api_call() {
+func gemini_api_call() {
 	os.Getenv("GEMINI_API_KEY")
 
 	ctx := context.Background()
@@ -38,4 +38,4 @@ func api_call() {
 		log.Fatal(err)
 	}
 	fmt.Println(resp.Text())
-} */
+}
