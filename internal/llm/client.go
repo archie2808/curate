@@ -3,9 +3,8 @@ package llm
 // Gemini client wrapper
 
 import (
-	"bufio"
 	"context"
-	"fmt"
+	"curatio/internal/profile"
 	"log"
 	"os"
 	"strings"
@@ -13,7 +12,8 @@ import (
 	"google.golang.org/genai"
 )
 
-func gemini_api_call() {
+// Define GenreBuckets(), send get artist sample to model and have it return genres
+func GenreBuckets(artistSample profile.ArtistSample, modelContext *genai.GenerateContentConfig) string {
 	os.Getenv("GEMINI_API_KEY")
 
 	ctx := context.Background()
@@ -22,22 +22,18 @@ func gemini_api_call() {
 		log.Fatal(err)
 	}
 
-	// Ask User for a message
-	reader := bufio.NewReader(os.Stdin)
-	fmt.Print("Whaddup? ...")
-	userInput, _ := reader.ReadString('\n')
-	userInput = strings.TrimSpace(userInput)
+	artistData := strings.Join(artistSample.Artists, ", ")
 
-	// Query model
+	// Query model, give tracks data
 	resp, err := client.Models.GenerateContent(
 		ctx,
 		"gemini-2.5-flash",
-		genai.Text(userInput),
-		nil,
+		genai.Text(artistData),
+		modelContext,
 	)
 
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(resp.Text())
+	return resp.Text()
 }

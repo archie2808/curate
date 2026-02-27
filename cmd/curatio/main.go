@@ -3,10 +3,10 @@ package main
 import (
 	"context"
 	"curatio/internal/auth"
+	"curatio/internal/llm"
+	"curatio/internal/profile"
 	"curatio/internal/spotify"
-	"encoding/json"
 	"log"
-	"os"
 )
 
 // TLS config
@@ -22,24 +22,14 @@ func main() {
 		log.Fatal(err)
 	}
 
-	/*
-		user, err := client.CurrentUser(context.Background())
-		if err != nil {
-			log.Fatal(err)
-		}
-		// Pass UID to playlist creation in curator flow when we get to that point
-		userID := user.ID
-	*/
 	trackInfo, err := spotify.FetchTrackInfo(context.Background(), client)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	// Write trackInfo to file
-	jsonData, err := json.Marshal(trackInfo)
-	if err != nil {
-		log.Fatal(err)
-	}
-	os.WriteFile("output.json", jsonData, 0644)
+	artistSample := profile.GetArtistSample(trackInfo)
+	config := llm.PromptInstructions()
 
+	buckets := llm.GenreBuckets(artistSample, config)
+	log.Println(buckets)
 }
